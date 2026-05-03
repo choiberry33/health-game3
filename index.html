@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>健康飲食射擊遊戲</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Noto Sans TC", Arial, sans-serif;
+  background: linear-gradient(135deg, #dbeafe, #dcfce7, #fef9c3);
+  color: #1f2937;
+  text-align: center;
+}
+
+.screen {
+  min-height: 100vh;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.active { display: flex; }
+
+.card {
+  width: min(920px, 100%);
+  background: rgba(255,255,255,0.94);
+  border-radius: 28px;
+  padding: 34px;
+  box-shadow: 0 16px 40px rgba(15,23,42,0.16);
+}
+
+h1 { font-size: 42px; }
+button {
+  border: none;
+  border-radius: 16px;
+  padding: 12px 22px;
+  margin: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  background: #38bdf8;
+  color: white;
+}
+
+#gameScreen {
+  justify-content: flex-start;
+  padding: 18px;
+}
+
+.main-frame {
+  width: min(1280px, 100%);
+  min-height: 760px;
+  border-radius: 28px;
+  padding: 18px;
+  background: rgba(255,255,255,0.28);
+  border: 4px solid rgba(255,255,255,0.88);
+  display: grid;
+  grid-template-columns: minmax(620px, 2fr) minmax(330px, 0.95fr);
+  gap: 18px;
+}
+
+.left-zone {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 14px;
+}
+
+.status-panel, .knowledge-panel {
+  background: rgba(255,255,255,0.96);
+  border-radius: 22px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+}
+
+.status-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+#gameArea {
+  position: relative;
+  width: 100%;
+  height: 590px;
+  background: linear-gradient(180deg, #bfecff 0%, #e5ffe4 64%, #bbf7d0 100%);
+  border: 6px solid white;
+  border-radius: 28px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+#questionCard {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 88%;
+  background: white;
+  border-radius: 16px;
+  padding: 12px;
+  font-size: 22px;
+  font-weight: 900;
+  z-index: 20;
+}
+
+.sun {
+  position: absolute;
+  top: 90px;
+  right: 40px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #fde047;
+  box-shadow: 0 0 32px #fde047;
+}
+
+.ground {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 48px;
+  background: repeating-linear-gradient(45deg, #86efac 0, #86efac 12px, #bbf7d0 12px, #bbf7d0 24px);
+}
+
+#player {
+  position: absolute;
+  bottom: 38px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 120px;
+  z-index: 30;
+}
+
+.head {
+  width: 54px;
+  height: 54px;
+  background: #ffd7a8;
+  border-radius: 50%;
+  margin: 0 auto;
+  border: 3px solid #7c4a22;
+}
+
+.body {
+  width: 64px;
+  height: 54px;
+  background: linear-gradient(180deg, #60a5fa, #2563eb);
+  border-radius: 18px;
+  margin: -2px auto 0;
+  border: 3px solid #1d4ed8;
+}
+
+#gun {
+  position: absolute;
+  left: 50%;
+  top: 28px;
+  width: 8px;
+  height: 115px;
+  background: #0ea5e9;
+  border-radius: 8px;
+  transform-origin: bottom center;
+  transform: translateX(-50%) rotate(0deg);
+  box-shadow: 0 0 10px #38bdf8;
+}
+
+#aimLine {
+  position: absolute;
+  left: 50%;
+  bottom: 145px;
+  width: 4px;
+  height: 180px;
+  background: rgba(14,165,233,0.35);
+  transform-origin: bottom center;
+  transform: rotate(0deg);
+  z-index: 10;
+}
+
+.target {
+  position: absolute;
+  width: 150px;
+  min-height: 66px;
+  padding: 10px;
+  background: #fff7ed;
+  border: 3px solid #fb923c;
+  border-radius: 20px;
+  box-shadow: 0 7px 14px rgba(0,0,0,0.17);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 15px;
+  z-index: 15;
+}
+
+.target::before {
+  content: "🍽️";
+  margin-right: 5px;
+}
+
+.bullet {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #0284c7;
+  border-radius: 50%;
+  box-shadow: 0 0 12px #38bdf8;
+  z-index: 25;
+}
+
+.knowledge-panel {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+.knowledge-title {
+  font-size: 25px;
+  font-weight: 900;
+  color: #0369a1;
+  margin-bottom: 12px;
+}
+
+#resultBadge {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  font-weight: 900;
+  margin-bottom: 12px;
+}
+
+#knowledgeText {
+  font-size: 18px;
+  line-height: 1.75;
+  background: #f8fafc;
+  border-radius: 18px;
+  padding: 16px;
+  border: 2px dashed #bae6fd;
+  flex: 1;
+}
+
+.tip-box {
+  margin-top: 12px;
+  background: #ecfccb;
+  border-radius: 16px;
+  padding: 12px;
+  border: 2px solid #bef264;
+}
+
+.correct { color: #16a34a; font-weight: 900; }
+.wrong { color: #dc2626; font-weight: 900; }
+
+#reviewList {
+  text-align: left;
+  max-height: 48vh;
+  overflow: auto;
+  background: white;
+  padding: 18px;
+  border-radius: 20px;
+}
+
+.review-item {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+@media (max-width: 980px) {
+  .main-frame { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+
+<section id="homeScreen" class="screen active">
+  <div class="card">
+    <h1>健康飲食射擊遊戲</h1>
+    <p>
+      使用滑鼠控制射擊方向，點擊左鍵發射子彈。<br>
+      射中正確答案加分，射錯答案會扣生命。<br>
+      主題：飲食健康
+    </p>
+    <button onclick="startGame()">開始遊戲</button>
+  </div>
+</section>
+
+<section id="gameScreen" class="screen">
+  <div class="main-frame">
+    <div class="left-zone">
+      <div class="status-panel">
+        <div class="status-row">
+          <span>主題：<strong>飲食</strong></span>
+          <span>題數：<strong id="questionNumber">1</strong> / <strong>8</strong></span>
+          <span>分數：<strong id="score">0</strong></span>
+          <span>生命：<strong id="lives">❤️❤️❤️</strong></span>
+        </div>
+      </div>
+
+      <div id="gameArea">
+        <div id="questionCard">題目載入中...</div>
+        <div class="sun"></div>
+        <div class="ground"></div>
+        <div id="aimLine"></div>
+
+        <div id="player">
+          <div id="gun"></div>
+          <div class="head"></div>
+          <div class="body"></div>
+        </div>
+      </div>
+
+      <div>
+        <button onclick="backHome()">回首頁</button>
+      </div>
+    </div>
+
+    <aside class="knowledge-panel">
+      <div class="knowledge-title">健康知識補給站</div>
+      <div id="resultBadge">等待作答中</div>
+      <div id="knowledgeText">移動滑鼠瞄準答案，點擊左鍵射擊。</div>
+      <div class="tip-box">小提醒：不要只記答案，也要看「為什麼」。</div>
+    </aside>
+  </div>
+</section>
+
+<section id="endScreen" class="screen">
+  <div class="card">
+    <h1>遊戲結束！</h1>
+    <h2 id="finalScore"></h2>
+    <p id="finalComment"></p>
+    <h2>錯題複習</h2>
+    <div id="reviewList"></div>
+    <button onclick="startGame()">再玩一次</button>
+    <button onclick="showScreen('homeScreen')">回首頁</button>
+  </div>
+</section>
+
+<script>
+const questions = [
+  q("下列哪個飲食習慣比較健康？",
+    ["每天吃多樣化食物", "只吃炸物", "用手搖飲代替水", "完全不吃蔬菜"],
+    "每天吃多樣化食物",
+    "多樣化飲食能幫助身體獲得不同營養素。",
+    "均衡飲食是各類食物適量搭配。"),
+
+  q("想減少糖分攝取，下列哪個選擇比較好？",
+    ["白開水", "全糖珍珠奶茶", "含糖汽水", "每天喝能量飲料"],
+    "白開水",
+    "白開水不含糖，是日常補充水分的好選擇。",
+    "含糖飲料容易讓糖分攝取過量。"),
+
+  q("選擇點心時，哪一個比較符合健康飲食？",
+    ["水果或無糖優格", "每天炸雞配可樂", "糖果當正餐", "只吃洋芋片"],
+    "水果或無糖優格",
+    "水果與無糖優格比高糖零食更適合作為點心。",
+    "點心也可以選擇較少糖、少油、營養較高的食物。"),
+
+  q("下列哪一種吃法比較有助於均衡？",
+    ["蔬菜、蛋白質、全穀雜糧都搭配", "只吃白飯", "只吃肉不吃菜", "每天只吃甜點"],
+    "蔬菜、蛋白質、全穀雜糧都搭配",
+    "不同食物提供不同營養，搭配更完整。",
+    "一餐中可包含主食、蛋白質、蔬菜與水分。"),
+
+  q("外食時想吃得健康，下列哪個做法較適合？",
+    ["少油少鹽並加蔬菜", "每餐都加大炸物", "只喝甜湯", "完全不看食物內容"],
+    "少油少鹽並加蔬菜",
+    "外食常油、鹽、糖較多，選擇時可增加蔬菜。",
+    "外食族可從減少調味、增加蔬菜開始。"),
+
+  q("下列哪個做法可以幫助避免吃太多？",
+    ["慢慢吃並注意飽足感", "邊滑手機邊狂吃", "看到吃到飽就硬撐", "每餐都吃到很不舒服"],
+    "慢慢吃並注意飽足感",
+    "慢慢吃較容易感覺飽足，減少吃過量。",
+    "健康飲食也包含覺察自己的飢餓與飽足感。"),
+
+  q("早餐比較適合選擇哪一種？",
+    ["蛋、全麥吐司與無糖飲品", "只有含糖飲料", "一大包糖果", "完全不吃也不喝水"],
+    "蛋、全麥吐司與無糖飲品",
+    "含有蛋白質、主食與水分的早餐較能支持上午活動。",
+    "早餐內容應盡量均衡。"),
+
+  q("下列哪個是健康飲食的核心觀念？",
+    ["適量、均衡、多樣化", "越甜越健康", "只吃單一食物", "完全不喝水"],
+    "適量、均衡、多樣化",
+    "健康飲食強調適量搭配，而不是極端限制。",
+    "飲食教育重點是建立可持續的生活習慣。")
+];
+
+function q(question, options, answer, reason, point) {
+  return { question, options, answer, reason, point };
+}
+
+const gameArea = document.getElementById("gameArea");
+const gun = document.getElementById("gun");
+const aimLine = document.getElementById("aimLine");
+const resultBadge = document.getElementById("resultBadge");
+const knowledgeText = document.getElementById("knowledgeText");
+
+let questionIndex = 0;
+let score = 0;
+let lives = 3;
+let targets = [];
+let bullets = [];
+let wrongRecords = [];
+let locked = false;
+let angle = 0;
+let loopId = null;
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function startGame() {
+  questionIndex = 0;
+  score = 0;
+  lives = 3;
+  wrongRecords = [];
+  locked = false;
+  showScreen("gameScreen");
+  updateStatus();
+  loadQuestion();
+  startLoop();
+}
+
+function updateStatus() {
+  document.getElementById("questionNumber").textContent = Math.min(questionIndex + 1, questions.length);
+  document.getElementById("score").textContent = score;
+  document.getElementById("lives").textContent = "❤️".repeat(lives) + "🤍".repeat(3 - lives);
+}
+
+function loadQuestion() {
+  clearTargets();
+  clearBullets();
+  locked = false;
+
+  const item = questions[questionIndex];
+  document.getElementById("questionCard").textContent = item.question;
+  resultBadge.textContent = `第 ${questionIndex + 1} 題`;
+  resultBadge.style.background = "#e0f2fe";
+  knowledgeText.innerHTML = "移動滑鼠瞄準答案，點擊左鍵射擊。";
+
+  createTargets(item.options, item.answer);
+}
+
+function createTargets(options, answer) {
+  const shuffled = [...options].sort(() => Math.random() - 0.5);
+  const positions = [
+    { left: "8%", top: "130px" },
+    { left: "34%", top: "105px" },
+    { left: "58%", top: "130px" },
+    { left: "74%", top: "210px" }
+  ];
+
+  shuffled.forEach((text, i) => {
+    const div = document.createElement("div");
+    div.className = "target";
+    div.textContent = text;
+    div.dataset.correct = text === answer ? "true" : "false";
+    div.style.left = positions[i].left;
+    div.style.top = positions[i].top;
+    gameArea.appendChild(div);
+    targets.push(div);
+  });
+}
+
+gameArea.addEventListener("mousemove", e => {
+  const rect = gameArea.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+
+  const originX = rect.width / 2;
+  const originY = rect.height - 150;
+
+  let dx = mouseX - originX;
+  let dy = mouseY - originY;
+
+  let rawAngle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+  angle = Math.max(-80, Math.min(80, rawAngle));
+
+  gun.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+  aimLine.style.transform = `rotate(${angle}deg)`;
+});
+
+gameArea.addEventListener("click", () => {
+  if (locked) return;
+  shootBullet();
+});
+
+function shootBullet() {
+  const rect = gameArea.getBoundingClientRect();
+  const originX = rect.width / 2;
+  const originY = rect.height - 150;
+
+  const bullet = document.createElement("div");
+  bullet.className = "bullet";
+  bullet.style.left = originX + "px";
+  bullet.style.top = originY + "px";
+
+  const rad = (angle - 90) * Math.PI / 180;
+  bullet.vx = Math.cos(rad) * 9;
+  bullet.vy = Math.sin(rad) * 9;
+
+  gameArea.appendChild(bullet);
+  bullets.push(bullet);
+}
+
+function startLoop() {
+  cancelAnimationFrame(loopId);
+  loop();
+}
+
+function loop() {
+  moveBullets();
+  checkBulletHit();
+  loopId = requestAnimationFrame(loop);
+}
+
+function moveBullets() {
+  const areaWidth = gameArea.clientWidth;
+  const areaHeight = gameArea.clientHeight;
+
+  bullets.forEach(b => {
+    const x = parseFloat(b.style.left);
+    const y = parseFloat(b.style.top);
+    b.style.left = (x + b.vx) + "px";
+    b.style.top = (y + b.vy) + "px";
+  });
+
+  bullets = bullets.filter(b => {
+    const x = parseFloat(b.style.left);
+    const y = parseFloat(b.style.top);
+    const inside = x > -20 && x < areaWidth + 20 && y > -20 && y < areaHeight + 20;
+    if (!inside) b.remove();
+    return inside;
+  });
+}
+
+function checkBulletHit() {
+  if (locked) return;
+
+  for (const bullet of bullets) {
+    const bRect = bullet.getBoundingClientRect();
+
+    for (const target of targets) {
+      const tRect = target.getBoundingClientRect();
+
+      const hit = !(bRect.right < tRect.left ||
+                    bRect.left > tRect.right ||
+                    bRect.bottom < tRect.top ||
+                    bRect.top > tRect.bottom);
+
+      if (hit) {
+        locked = true;
+        const current = questions[questionIndex];
+        const correct = target.dataset.correct === "true";
+
+        if (correct) {
+          score += 10;
+        } else {
+          lives--;
+          wrongRecords.push({
+            question: current.question,
+            chosen: target.textContent,
+            answer: current.answer,
+            reason: current.reason,
+            point: current.point
+          });
+        }
+
+        bullet.remove();
+        showResult(correct, target.textContent, current);
+        return;
+      }
+    }
+  }
+}
+
+function showResult(correct, chosenText, q) {
+  updateStatus();
+  clearTargets();
+  clearBullets();
+
+  resultBadge.innerHTML = correct
+    ? `<span class="correct">射中了正確答案！</span>`
+    : `<span class="wrong">射錯了！</span>`;
+
+  resultBadge.style.background = correct ? "#dcfce7" : "#fee2e2";
+
+  knowledgeText.innerHTML = `
+    <strong>你射中的答案：</strong>${chosenText}<br>
+    <strong>正確答案：</strong>${q.answer}<br><br>
+    <strong>原因說明：</strong>${q.reason}<br><br>
+    <strong>知識點補充：</strong>${q.point}<br><br>
+    <span style="color:#0369a1; font-weight:900;">3 秒後進入下一題。</span>
+  `;
+
+  setTimeout(() => {
+    if (lives <= 0 || questionIndex + 1 >= questions.length) {
+      endGame(lives <= 0);
+    } else {
+      questionIndex++;
+      loadQuestion();
+    }
+  }, 3000);
+}
+
+function endGame(lifeOver) {
+  cancelAnimationFrame(loopId);
+  clearTargets();
+  clearBullets();
+  showScreen("endScreen");
+
+  document.getElementById("finalScore").textContent =
+    `你的分數：${score} / ${questions.length * 10}`;
+
+  document.getElementById("finalComment").textContent =
+    lifeOver ? "生命用完了，先看看錯題複習，再挑戰一次！"
+             : "太棒了！你完成了健康飲食射擊挑戰。";
+
+  renderReview();
+}
+
+function renderReview() {
+  const list = document.getElementById("reviewList");
+
+  if (wrongRecords.length === 0) {
+    list.innerHTML = "<p>恭喜你沒有錯題！</p>";
+    return;
+  }
+
+  list.innerHTML = wrongRecords.map((r, i) => `
+    <div class="review-item">
+      <strong>錯題 ${i + 1}：</strong>${r.question}<br>
+      <strong>你的答案：</strong>${r.chosen}<br>
+      <strong>正確答案：</strong>${r.answer}<br>
+      <strong>原因：</strong>${r.reason}<br>
+      <strong>知識點：</strong>${r.point}
+    </div>
+  `).join("");
+}
+
+function clearTargets() {
+  targets.forEach(t => t.remove());
+  targets = [];
+}
+
+function clearBullets() {
+  bullets.forEach(b => b.remove());
+  bullets = [];
+}
+
+function backHome() {
+  cancelAnimationFrame(loopId);
+  clearTargets();
+  clearBullets();
+  showScreen("homeScreen");
+}
+</script>
+</body>
+</html>
