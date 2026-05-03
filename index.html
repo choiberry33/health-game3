@@ -133,7 +133,8 @@ button {
   position: absolute;
   bottom: 38px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(0.75);
+  transform-origin: bottom center;
   width: 90px;
   height: 120px;
   z-index: 30;
@@ -197,11 +198,6 @@ button {
   font-weight: 900;
   font-size: 15px;
   z-index: 15;
-}
-
-.target::before {
-  content: "🍽️";
-  margin-right: 5px;
 }
 
 .bullet {
@@ -274,6 +270,22 @@ button {
 @media (max-width: 980px) {
   .main-frame { grid-template-columns: 1fr; }
 }
+  #gun {
+  display: none !important;
+}
+
+#aimLine {
+  position: absolute;
+  left: 50%;
+  bottom: 120px;
+  width: 5px;
+  height: 170px;
+  background: rgba(14,165,233,0.55);
+  transform-origin: bottom center;
+  z-index: 25;
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(14,165,233,0.6);
+}
 </style>
 </head>
 
@@ -281,7 +293,7 @@ button {
 
 <section id="homeScreen" class="screen active">
   <div class="card">
-    <h1>健康飲食射擊遊戲</h1>
+    <h1>健康飲食遊戲</h1>
     <p>
       使用滑鼠控制射擊方向，點擊左鍵發射子彈。<br>
       射中正確答案加分，射錯答案會扣生命。<br>
@@ -452,12 +464,12 @@ function loadQuestion() {
 
 function createTargets(options, answer) {
   const shuffled = [...options].sort(() => Math.random() - 0.5);
-  const positions = [
-    { left: "8%", top: "130px" },
-    { left: "34%", top: "105px" },
-    { left: "58%", top: "130px" },
-    { left: "74%", top: "210px" }
-  ];
+ const positions = [
+  { left: "8%", top: "135px" },
+  { left: "31%", top: "135px" },
+  { left: "54%", top: "135px" },
+  { left: "77%", top: "135px" }
+];
 
   shuffled.forEach((text, i) => {
     const div = document.createElement("div");
